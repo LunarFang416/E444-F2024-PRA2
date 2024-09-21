@@ -4,8 +4,8 @@ from flask import Flask, render_template, session, flash, url_for, redirect
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms import StringField, SubmitField, EmailField, ValidationError
+from wtforms.validators import DataRequired, Email
 from datetime import datetime, UTC
 from dotenv import load_dotenv
 
@@ -17,21 +17,30 @@ moment = Moment(app)
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_key')
 
-class NameForm(FlaskForm):
+def uoft_email_check(_, field):
+    if not field.data.endswith('utoronto.ca'):
+        raise ValidationError('Email must be from the utoronto.ca domain.')
+
+class StudentForm(FlaskForm):
     name = StringField('What is your name?', validators=[DataRequired()])
+    email = EmailField('What is your email?', validators=[DataRequired(), Email(), uoft_email_check])
     submit = SubmitField('Submit')
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    form = NameForm()
+    form = StudentForm()
     if form.validate_on_submit():
         old_name = session.get('name')
         if old_name is not None and old_name != form.name.data:
             flash('Looks like you changed your name!')
+        old_email = session.get('email')
+        if old_email is not None and old_email != form.email.data:
+            flash('Looks like you changed your email!')
+        session['email'] = form.email.data
         session['name'] = form.name.data
         return redirect(url_for('index'))
-    return render_template('index.html', form=form, name=session.get('name'))
+    return render_template('index.html', form=form, name=session.get('name'), email=session.get('email'))
 
 @app.route('/user/<name>')
 def user(name):
