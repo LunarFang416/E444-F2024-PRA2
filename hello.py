@@ -6,7 +6,7 @@ from flask_moment import Moment
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, EmailField, ValidationError
 from wtforms.validators import DataRequired, Email
-from datetime import datetime, UTC
+from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -44,7 +44,7 @@ def index():
 
 @app.route('/user/<name>')
 def user(name):
-    return render_template('user.html', name=name, current_time=datetime.now(UTC))
+    return render_template('user.html', name=name, current_time=datetime.now())
 
 @app.errorhandler(404) 
 def page_not_found(e): 
